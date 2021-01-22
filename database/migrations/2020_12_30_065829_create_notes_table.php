@@ -14,11 +14,11 @@ class CreateNotesTable extends Migration
     public function up()
     {
         Schema::create('notes', function (Blueprint $table) {
+            $table->unsignedBigInteger('user_id');
             $table->id();
             $table->string('title');
             $table->longText('description');
             $table->integer('favourite');
-            $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
         });

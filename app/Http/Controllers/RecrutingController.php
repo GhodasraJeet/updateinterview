@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 
 class RecrutingController extends Controller
 {
+     public $expereince=0,$year=0,$month=0;
     /**
      * Display a listing of the resource.
      *
@@ -20,8 +21,7 @@ class RecrutingController extends Controller
     {
         if($request->ajax())
         {
-            
-             $data=Student::with('getTechnology')->latest()->get();
+            $data=Student::with('getTechnology')->latest()->get();
             return response()->json(['success'=>$data]);
         }
         else
@@ -66,7 +66,6 @@ class RecrutingController extends Controller
             {
                 $validator=Validator::make($request->all(),[
                     'editname'=>"required|string|min:2",
-                    // 'editemail'=>"required",
                     'editphone'=>"required|numeric|digits:10",
                     'edittechnology'=>"required"
                 ]);
@@ -79,7 +78,6 @@ class RecrutingController extends Controller
                     $attachment_name='';
                     $student=Student::find($request->studentid);
                     $student->name=$request->editname;
-                    // $student->email=$request->editemail;
                     $student->phone=$request->editphone;
                     if ($request->hasFile('attachment')) {
                         $image = $request->file('attachment');
@@ -96,21 +94,19 @@ class RecrutingController extends Controller
             }
             else
             {
-                $expereince=0;
-                $year=0;
-                $month=0;
+
                 if($request->expereince==1)
                 {
-                    $year=$request->year;
-                    $month=$request->month;
+                    $this->year=$request->year;
+                    $this->month=$request->month;
                 }
                 if($request->expereince==0)
                 {
-                    $expereince=1;
+                    $this->expereince=1;
                 }
                 $validator=Validator::make($request->all(),[
                     'name'=>"required|string|min:2",
-                    'email'=>"required|unique:student,email",
+                    'email'=>"required|email|unique:student,email",
                     'phone'=>"required|numeric|digits:10",
                     'attachment'=>"required",
                     'technology'=>"required",
@@ -123,10 +119,10 @@ class RecrutingController extends Controller
                 else
                 {
                     if ($request->hasFile('attachment')) {
-                    $image = $request->file('attachment');
-                    $name = time().'.'.$image->getClientOriginalExtension();
-                    $destinationPath = public_path('/attachment');
-                    $image->move($destinationPath, $name);
+                        $image = $request->file('attachment');
+                        $name = time().'.'.$image->getClientOriginalExtension();
+                        $destinationPath = public_path('/attachment');
+                        $image->move($destinationPath, $name);
                     }
                     $student=new Student();
                     $student->name=$request->name;
@@ -135,9 +131,9 @@ class RecrutingController extends Controller
                     $student->attachment=$name;
                     $date=Carbon::now()->format('d-m-y');
                     $student->date=$date;
-                    $student->fresher=$expereince;
-                    $student->expereince_year=$year;
-                    $student->expereince_month=$month;
+                    $student->fresher=$this->expereince;
+                    $student->expereince_year=$this->year;
+                    $student->expereince_month=$this->month;
                     $student->state_id=$request->state;
                     $student->save();
                     $student->getTechnology()->attach($request->technology);
@@ -159,7 +155,7 @@ class RecrutingController extends Controller
     {
         try
         {
-            $technology=Technology::select('id','tech')->get(); 
+            $technology=Technology::select('id','tech')->get();
 
             $single_student=Student::with('getTechnology')->findorfail($id);
             return response()->json(['success'=>$single_student,'technology'=>$technology]);

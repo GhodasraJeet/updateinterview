@@ -13,7 +13,7 @@ class Student extends Model
 
     public function getState()
     {
-        return $this->belongsTo(State::class);
+        return $this->belongsTo(State::class,'state_id');
     }
 
     public function getTechnology()

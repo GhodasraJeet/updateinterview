@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreJobRequest;
 use App\Job;
 use Exception;
 use App\Technology;
@@ -17,7 +18,7 @@ class JobsController extends Controller
      */
     public function index()
     {
-        $jobs=Job::with('getTechnology')->orderBy('updated_at','desc')->paginate(10);
+        $jobs=Job::with('getTechnology')->orderBy('updated_at','desc')->paginate(5);
         $technology=Technology::all();
         return view('jobs.index',compact('jobs','technology'));
     }
@@ -39,42 +40,25 @@ class JobsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreJobRequest $request)
     {
-        if($request->ajax())
-        {
-            $validator=Validator::make($request->all(),[
-                'title'=>"required|min:2|max:50",
-                'jobdescription'=>"required|min:2|max:200",
-                'technology'=>"required"
+        if(isset($request->jobid)){
+            $job=Job::updateOrCreate(['id'=>$request->jobid],
+            [
+                'title'=>$request->title,
+                'description'=>$request->jobdescription
             ]);
-            if ($validator->fails())
-            {
-                return response()->json(['errors'=>$validator->errors()->all()]);
-            }
-            else
-            {
-                $job=new Job();
-                $job->title=$request->title;
-                $job->description=$request->jobdescription;
-                $job->save();
-                $job->getTechnology()->attach($request->technology);
-                return response()->json(['success'=>'Job successfully added']);
-            }
+            $job->getTechnology()->sync($request->technology);
+            return response()->json(['success'=>$job]);
         }
         else
         {
-            $this->validate($request,[
-                'jobtitle'=>"required|min:2|max:50",
-                'jobdescription'=>"required|min:2|max:200",
-                'jobtechnology'=>"required",
-            ]);
             $job=new Job();
-            $job->title=$request->jobtitle;
+            $job->title=$request->title;
             $job->description=$request->jobdescription;
             $job->save();
-            $job->getTechnology()->attach($request->jobtechnology);
-            return redirect()->route('job.create')->with('success','Job added successfully.');
+            $job->getTechnology()->attach($request->technology);
+            return response()->json(['success'=>'Job successfully added']);
         }
 
     }
@@ -87,6 +71,13 @@ class JobsController extends Controller
      */
     public function show($id)
     {
+        try {
+            $jobs=Job::with('getTechnology')->findorfail($id);
+            $technology=Technology::select('id','tech')->get();
+            return response()->json(['success'=>$jobs,'technology'=>$technology]);
+        } catch (Exception $ex) {
+            return response()->json(['success'=>'Something Wrong']);
+        }
 
     }
 
@@ -98,14 +89,7 @@ class JobsController extends Controller
      */
     public function edit($id)
     {
-        try {
-            $technology=Technology::all();
-            $job=Job::with('getTechnology')->findorfail($id);
-            $a=collect($job->getTechnology);
-        } catch (Exception $ex) {
-            return redirect()->route('job.index')->with('danger','Job could not edit.');
-        }
-        return view('jobs.edit',compact('job','technology'));
+
     }
 
     /**
@@ -115,15 +99,16 @@ class JobsController extends Controller
      * @param  \App\Job  $job
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request,Job $job)
+    public function update(Request $request,$id)
     {
-        $this->validate($request,[
-            'jobtitle'=>"required|min:2|max:50",
-            'jobdescription'=>"required|min:2|max:200"
-        ]);
-        $job=Job::updateOrCreate(['id'=>$job->id],$request->all());
+        return response()->json(['success'=>'Job is successfully updated']);
+        // $this->validate($request,[
+        //     'jobtitle'=>"required|min:2|max:50",
+        //     'jobdescription'=>"required|min:2|max:200"
+        // ]);
+        $job=Job::updateOrCreate(['id'=>$id],$request->all());
         $job->getTechnology()->sync($request->jobtechnology);
-        return redirect()->route('job.index')->with(['success'=>'Job is successfully updated']);
+        return response()->json(['success'=>'Job is successfully updated']);
     }
 
     /**
@@ -137,41 +122,41 @@ class JobsController extends Controller
         try
         {
             Job::findOrFail($id)->delete();
-            return redirect()->route('job.index')->with('success','Job deleted successfully.');
+            return response()->json(['success'=>'Job deleted successfully']);
         }
         catch(Exception $ex)
         {
-            return redirect()->route('job.index')->with('danger','Job could not delete.');
+            return response()->json(['success'=>'Something Wrong']);
         }
+    }
+
+    public function deleteMultipleJobs(Request $request)
+    {
+        $ids=$request->ids;
+        Job::whereIn('id',explode(",",$ids))->delete();
+        return response()->json(['success'=>'Job deleted successfully']);
     }
 
      /**
      * Search HR
      */
-    public function searchjob(Request $request)
+
+
+    public function fetch_job(Request $request)
     {
-        $constraints = [
-            'title' => $request['title'],
-            'technology'=>$request['technology']
-            ];
-        $employees = $this->doSearchingQuery($constraints);
-        $constraints['title'] = $request['title'];
-        $technology=Technology::all();
-        return view('jobs.index', ['jobs' => $employees, 'searchingVals' => $constraints,'technology'=>$technology]);
-
-    }
-
-    private function doSearchingQuery($constraints) {
-        $query = Job::with('getTechnology');
-        $fields = array_keys($constraints);
-        $result=$constraints['technology'];
-        if(!empty($result))
+        if($request->ajax())
         {
-            $query->whereHas('getTechnology',function($q) use($result){
-                $q->whereIn('id',$result);
-            });
+        $datas=Job::with('getTechnology');
+           if($request->search)
+           {
+               $query = $request->search;
+               $query = str_replace(" ", "%", $query);
+               $datas->where('title', 'like', '%'.$query.'%');
+           }
+           $jobs=$datas->paginate(5);
+         return view('jobs.jobpagination', compact('jobs'))->render();
         }
-        $query = $query->where($fields[0], 'like', '%'.$constraints['title'].'%');
-        return $query->paginate(5);
     }
+
+
 }

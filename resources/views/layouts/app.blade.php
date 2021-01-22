@@ -21,7 +21,8 @@
     <link href="{{ asset('css/vertical-menu.min.css') }}" rel="stylesheet">
     <link href="{{asset('css/toastr.css')}}" rel="stylesheet">
 
-    
+    <link rel="stylesheet" href="{{asset('css/select2.min.css')}}">
+
     @yield('css')
 
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
@@ -29,7 +30,7 @@
 <body class="vertical-layout vertical-menu-modern boxicon-layout no-card-shadow 2-columns  navbar-sticky footer-static menu-collapsed " data-open="click" data-menu="vertical-menu-modern" data-col="2-columns">
     <!-- BEGIN: Header-->
     <div class="header-navbar-shadow"></div>
-    <nav class="header-navbar main-header-navbar navbar-expand-lg navbar navbar-with-menu fixed-top ">
+    <nav class="header-navbar main-header-navbar navbar-expand-lg navbar navbar-with-menu fixed-top bg-secondary">
         <div class="navbar-wrapper">
             <div class="navbar-container content">
                 <div class="navbar-collapse" id="navbar-mobile">
@@ -37,16 +38,22 @@
                         <ul class="nav navbar-nav">
                             <li class="nav-item mobile-menu d-xl-none mr-auto"><a class="nav-link nav-menu-main menu-toggle hidden-xs" href="#"><i class="ficon bx bx-menu"></i></a></li>
                         </ul>
+                        <ul class="nav navbar-nav bookmark-icons">
+                            @include('layouts.header')
+                        </ul>
                     </div>
                     <ul class="nav navbar-nav float-right">
                         <li class="dropdown dropdown-user nav-item"><a class="dropdown-toggle nav-link dropdown-user-link" href="#" data-toggle="dropdown">
+                            <img class="round mr-1" src="{{asset('image/profile')}}/{{Auth::user()->profile_pictures}}" alt="avatar" height="40" width="40">
                                 <div class="user-nav d-sm-flex d-none">
-                                    <span class="user-name">{{Auth::user()->name}}</span>
-                                </div><span>
-                                    {{-- <img class="round" src="../../../app-assets/images/portrait/small/avatar-s-11.jpg" alt="avatar" height="40" width="40"> --}}
+                                    <span class="user-name">{{Auth::user()->name}} <i class="bx bx-caret-down"></i></span>
+                                </div>
+                                <span>
                                 </span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="{{route('profile.show')}}"><i class="bx bx-user mr-50"></i> Edit Profile</a>
+                                <a class="dropdown-item" href="{{route('password')}}"><i class="bx bx-lock mr-50"></i>Change Password</a>
                                 <form action="{{route('logout')}}" method="POST">
                                     @csrf
                                     <button type="submit" class="dropdown-item"><i class="bx bx-power-off mr-50"></i> Logout</button>
@@ -76,8 +83,6 @@
             <ul class="navigation navigation-main" id="main-menu-navigation" data-menu="menu-navigation" data-icon-style="">
                 <li class="{{ (request()->is('home*')) ? 'active':'' }} nav-item"><a href="{{route('home')}}"><i class="bx bx-home-alt"></i><span class="menu-title" data-i18n="Dashboard">Dashboard</span></a>
                 </li>
-                <li class=" navigation-header"><span>Apps</span>
-                </li>
                 <li class="{{ (request()->is('job*')) ? 'active':'' }} nav-item"><a href="{{route('job.index')}}"><i class="bx bx-envelope"></i><span class="menu-title" data-i18n="Email">Jobs</span></a>
                 </li>
                 <li class="{{ (request()->is('notes*')) ? 'active':'' }} nav-item"><a href="{{route('notes.index')}}"><i class="bx bx-check-circle"></i><span class="menu-title" data-i18n="Notes">Notes</span></a>
@@ -100,14 +105,185 @@
             <div class="content-header row">
             </div>
             <div class="content-body">
-                <!-- Basic Kanban App -->
                 <div class="kanban-overlay"></div>
                 <section id="kanban-wrapper">
+
+
+                    {{-- Job Modal Start --}}
+                    <div class="modal fade text-left" id="addjob" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3 class="modal-title" id="myModalLabel1">Add Job</h3>
+                                    <button type="button" class="close rounded-pill" data-dismiss="modal" aria-label="Close">
+                                        <i class="bx bx-x"></i>
+                                    </button>
+                                </div>
+                                <form id="jobform">
+                                    <div class="modal-body">
+                                        <div class="form-group">
+                                            <label>Title</label>
+                                            <input type="text" class="form-control" name="title" id="title" placeholder="Job Title">
+                                            <span class="text-danger error" data-error="title"></span>
+                                        </div>
+                                    <div class="form-group">
+                                        <label>Description </label>
+                                        <textarea placeholder="Type Here..." class="form-control" id="jobdescription" name="jobdescription"></textarea>
+                                        <span class="text-danger error" data-error="jobdescription"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Technology</label>
+                                        <select class="select2 form-control" name="technology[]" id="technology" multiple>
+                                        </select>
+                                        <span class="text-danger error" data-error="technology"></span>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-light-secondary" data-dismiss="modal">
+                                        <i class="bx bx-x d-block d-sm-none"></i>
+                                        <span class="d-none d-sm-block">Close</span>
+                                    </button>
+                                    <button type="submit" class="btn btn-primary ml-1">
+                                        <i class="bx bx-check d-block d-sm-none"></i>
+                                        <span class="d-none d-sm-block">Save</span>
+                                    </button>
+                                </div>
+                            </form>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Note Modal Start --}}
+                    <div class="modal fade text-left" id="addnote" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3 class="modal-title" id="myModalLabel1">Add Note</h3>
+                                    <button type="button" class="close rounded-pill" data-dismiss="modal" aria-label="Close">
+                                        <i class="bx bx-x"></i>
+                                    </button>
+                                </div>
+                                <form id="noteform">
+                                    <div class="container">
+                                        <div id="noteerrors" class="text-center"></div>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="form-group">
+                                            <label>Title</label>
+                                            <input type="text" name="notetitle" id="notetitle" placeholder="Title" class="form-control">
+                                        </div>
+                                    <div class="form-group">
+                                        <label>Description: </label>
+                                        <textarea placeholder="Type Here..." class="form-control" id="description" name="description"></textarea>
+                                    </div>
+                                    <div class="checkbox">
+                                        <input type="checkbox" name="favouritenote" class="checkbox-input" id="checkbox1">
+                                        <label for="checkbox1">Favourite</label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-light-secondary" data-dismiss="modal">
+                                        <i class="bx bx-x d-block d-sm-none"></i>
+                                        <span class="d-none d-sm-block">Close</span>
+                                    </button>
+                                    <button type="submit" class="btn btn-primary ml-1">
+                                        <i class="bx bx-check d-block d-sm-none"></i>
+                                        <span class="d-none d-sm-block">Save</span>
+                                    </button>
+                                </div>
+                            </form>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Student Modal --}}
+                    <div class="modal fade text-left" id="studentmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+                        <div class="modal-dialog " role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3 class="modal-title" id="myModalLabel1">Add Candidate</h3>
+                                    <button type="button" class="close rounded-pill" data-dismiss="modal" aria-label="Close">
+                                        <i class="bx bx-x"></i>
+                                    </button>
+                                </div>
+                                <form enctype="multipart/form-data" method="post" id="studentform">
+                                    <div class="container">
+                                        <div id="recruterrors" class="text-center"></div>
+                                    </div>
+                                <div class="modal-body">
+                                    <div class="row my-2">
+                                        <div class="col-md-6">
+                                            <label>Name</label>
+                                            <input type="text" name="name" id="name" class="form-control" placeholder="Name">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label>Email</label>
+                                            <input type="text" name="email" id="email" class="form-control" placeholder="Email">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Phone</label>
+                                        <input type="number" name="phone" id="phone" class="form-control" placeholder="Phone Number">
+                                    </div>
+                                    <div class="form-group d-flex my-2">
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="freshercollpase" name="expereince" value="0" class="custom-control-input" data-toggle="collapse" data-parent="#freshercollpase" checked>
+                                            <label class="custom-control-label" for="freshercollpase">Fresher</label>
+                                        </div>&nbsp;&nbsp;
+                                        <div class="custom-control custom-radio">
+                                            <input type="radio" id="expereincecollpase" name="expereince" value="1" class="custom-control-input" data-toggle="collapse" data-parent="#expereincecollpase">
+                                            <label class="custom-control-label" for="expereincecollpase">Expereince</label>
+                                        </div>
+                                    </div>
+                                    <div class="row collapse my-2" id="expereincepanel">
+                                        <div class="col-md-6">
+                                            <label for="year">Year</label>
+                                            <input type="number" name="year" id="year" class="form-control" value="0" placeholder="Year">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="month">Month</label>
+                                            <input type="number" name="month" id="month" class="form-control" placeholder="Month">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Technology</label>
+                                        <select class="select2 form-control" name="technology[]" id="student_technology" data-placeholder="Select Technology" multiple>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                    <label>Attachment</label>
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="attachment" name="attachment">
+                                        <label class="custom-file-label" for="attachment">Choose Attachment</label>
+                                    </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>State</label>
+                                        <select name="state" class="custom-select" id="state">
+                                            <option value="">Select Technology</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-light-secondary" data-dismiss="modal">
+                                        <i class="bx bx-x d-block d-sm-none"></i>
+                                        <span class="d-none d-sm-block">Close</span>
+                                    </button>
+                                    <button type="submit" class="btn btn-primary ml-1">
+                                        <i class="bx bx-check d-block d-sm-none"></i>
+                                        <span class="d-none d-sm-block">Save</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        </div>
+                    </div>
 
                     @yield('content')
 
                 </section>
-                <!--/ Sample Project kanban -->
 
             </div>
         </div>
@@ -119,9 +295,8 @@
     <div class="drag-target"></div>
 
      <!-- BEGIN: Footer-->
-     <footer class="footer footer-static footer-light">
-        <p class="clearfix mb-0"><span class="float-left d-inline-block">2021 &copy; techno stacks</span><span class="float-right d-sm-inline-block d-none">Devloped By  :  <a class="text-uppercase" href="https://1.envato.market/pixinvent_portfolio" target="_blank">Jeet & Mayank</a></span>
-            {{-- <button class="btn btn-primary btn-icon scroll-top" type="button"><i class="bx bx-up-arrow-alt"></i></button> --}}
+     <footer class="footer footer-static bg-primary text-white">
+        <p class="clearfix mb-0"><span class="float-left d-inline-block">{{ now()->year }} &copy; Technostacks</span><span class="float-right d-sm-inline-block d-none">Developed By  :  <a class="text-uppercase" href="#" target="_blank">Technostacks</a></span>
         </p>
     </footer>
     <!-- END: Footer-->
@@ -131,6 +306,153 @@
     <script src="{{asset('js/app-menu.min.js')}}"></script>
     <script src="{{asset('js/app.js')}}"></script>
     <script src="{{asset('js/toastr.min.js')}}"></script>
+    <script src="{{asset('js/select2.full.min.js')}}"></script>
+    <script src="{{asset('js/form-select2.min.js')}}"></script>
+    <script>
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+     fetch_technology();
+     fetch_state();
+
+    // Fetch Technology
+    function fetch_technology()
+    {
+        var all_tech='';
+        $.ajax({
+            url:'{{route("technology")}}',
+            method:'get',
+            success:function(data)
+            {
+                $.each(data.technology,function(key,value){
+                    all_tech+='<option value="'+value.id+'">'+value.tech+'</option>';
+                });
+                $('#technology,#student_technology').append(all_tech);
+            }
+        });
+    }
+    // Fetch State
+    function fetch_state()
+    {
+        var all_state='';
+        $.ajax({
+            url:'{{route("state")}}',
+            method:'get',
+            success:function(data)
+            {
+                $.each(data.state,function(key,value){
+                    all_state+='<option value="'+value.id+'">'+value.status+'</option>';
+                });
+                $('#state,#filterstate').append(all_state);
+            }
+        });
+    }
+
+    // Add New Job
+    $('#jobform').on('submit',function(e){
+        $('#joberrors').html('');
+        $('#success-message').html('');
+        e.preventDefault();
+
+        $.ajax({
+            url: "{{ route('job.store')}}",
+            method: 'post',
+            data: $('#jobform').serialize(),
+            success: function(data){
+
+                if(data.success){
+                    $('#addjob').modal('hide');
+                    $('#jobform')[0].reset();
+                     toastr.success(data.success, 'Success Message');
+                }
+            },
+            error:function(error){
+                    let errors = error.responseJSON.errors;
+                    for(let key in errors)
+                    {
+                        let errorDiv = $(`[data-error="${key}"]`);
+                        if(errorDiv.length )
+                        {
+                            errorDiv.text(errors[key][0]);
+                        }
+                    }
+                }
+        });
+    });
+
+    // Add New Note
+    $('#noteform').on('submit',function(e){
+        $('#noteerrors').html('');
+        $('#success-message').html('');
+        e.preventDefault();
+
+        $.ajax({
+            url: "{{ route('notes.store')}}",
+            method: 'post',
+            data: $('#noteform').serialize(),
+            success: function(data){
+                  if(data.messages)
+                {
+                    $('#noteerrors').append('<div class="bg-danger text-white py-1 mb-1">'+data.messages+'</div>');
+                }
+                $.each(data.errors, function(key, value){
+                    $('#noteerrors').show();
+                    $('#noteerrors').append('<div class="bg-danger text-white py-1 mb-1">'+value+'</div>');
+                    });
+                if(data.success){
+                    $('#success-message').append("");
+                    $('#addnote').modal('hide');
+                    $('#noteform')[0].reset();
+                    toastr.success(data.success, 'Success Message');
+
+                }
+                if(data.danger){
+                    $('#success-message').append("");
+                    toastr.success(data.danger, 'Warnning Message');
+                }
+
+            }
+        });
+    });
+
+    // Add New Student
+    $('#studentform').on('submit',function(e){
+        $('#recruterrors').html('');
+        $('#success-message').html('');
+        e.preventDefault();
+
+        $.ajax({
+            url: "{{route('recrut.store')}}",
+            method: 'post',
+            dataType:'JSON',
+            contentType: false,
+            cache: false,
+            processData: false,
+            data: new FormData(this),
+            success: function(data){
+                $.each(data.errors, function(key, value){
+                    $('#recruterrors').show();
+                    $('#recruterrors').append('<div class="bg-danger text-white py-1 mb-1">'+value+'</div>');
+                    });
+                if(data.success){
+                    $('#success-message').append("");
+                    $('#studentmodal').modal('hide');
+                    $('#studentform')[0].reset();
+                    toastr.success(data.success, 'Success Message');
+
+                }
+                if(data.danger){
+                    $('#success-message').append("");
+                    toastr.success(data.danger, 'danger Message');
+                }
+
+
+            }
+        });
+    });
+    </script>
     @yield('js')
 </body>
 </html>

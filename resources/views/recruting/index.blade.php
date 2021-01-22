@@ -5,15 +5,15 @@
     <link rel="stylesheet" href="{{asset('css/jkanban.min.css')}}">
     <link rel="stylesheet" href="{{asset('css/select2.min.css')}}">
     <style type="text/css">
-input[type=number] {
-  -moz-appearance: textfield;
-}
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-</style>
+    input[type=number] {
+    -moz-appearance: textfield;
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    }
+    </style>
 @endsection
 @section('content')
 
@@ -80,11 +80,12 @@ input::-webkit-inner-spin-button {
                     <i class='bx bx-trash mr-50'></i>
                     <span>Delete</span>
                 </button>
+                 @endcan
                 <button class="btn btn-primary glow update-kanban-item d-flex align-items-center" type="submit">
                     <i class='bx bx-send mr-50'></i>
                     <span>Save</span>
                 </button>
-                @endcan
+
             </div>
         </form>
         <!-- form start end-->
@@ -101,7 +102,10 @@ input::-webkit-inner-spin-button {
 <script src="{{asset('js/form-select2.min.js')}}"></script>
 
 <script>
-    $(document).ready(function(){
+$(document).ready(function(){
+
+
+    setTimeout(() => { $('.toast').hide(); }, 2000);
     $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -122,12 +126,11 @@ input::-webkit-inner-spin-button {
 
                 var allStudent=[],new_applicant=[],hr_round=[],technical=[],practical=[],offered=[],rejected=[],hold=[];
                 var kanban_curr_el;
-
                 $.each(data.success,function(key,value){
                 var tech='';
-                        $.each(value.get_technology,function(key,value){
-                            tech+="<div class='badge' style='margin:2px;'>"+value.tech+"</div>";
-                        });
+                    $.each(value.get_technology,function(key,value){
+                        tech+="<div class='badge' style='margin:2px;'>"+value.tech+"</div>";
+                    });
                     if(value.state_id==1){
                         new_applicant.push({id:value.id,title:value.name,border:'primary',dueDate:tech });
                     }
@@ -179,9 +182,6 @@ input::-webkit-inner-spin-button {
                         url:"recrut/"+kanban_curr_item_id,
                         method:"get",
                         success:function(data){
-
-
-
                             $('#editname').val(data.success.name);
                             $('#editemail').val(data.success.email);
                             $('#editphone').val(data.success.phone);
@@ -206,7 +206,6 @@ input::-webkit-inner-spin-button {
                                     return false;
                                 }
                             }
-
                              $.each(data.technology,function(key,value){
                                 if(checkExists(value.tech))
                                 {
@@ -216,18 +215,23 @@ input::-webkit-inner-spin-button {
                                 {
                                     tech+='<option value='+value.id+'>'+value.tech+'</option>';
                                 }
-
                             });
-                            // $.each(data.success.get_technology,function(key,value){
-                            //     tech+='<option value='+value.id+' selected>'+value.tech+'</option>';
-                            // });
                             $('#edittechnology').append(tech);
                         }
                     });
                 }
             });
 
-                var board_item_id, board_item_el;
+            // $('[data-id=kanban-board-1]').before("<h3>New Applicant</h3>");
+            // $('[data-id=kanban-board-2]').before("<h3>HR Round</h3>");
+            // $('[data-id=kanban-board-3]').before("<h3>Technical</h3>");
+            // $('[data-id=kanban-board-4]').before("<h3>Practical</h3>");
+            // $('[data-id=kanban-board-5]').before("<h3>New Applicant</h3>");
+            // $('[data-id=kanban-board-6]').before("<h3>New Applicant</h3>");
+            // $('[data-id=kanban-board-7]').before("<h3>Hold</h3>");
+
+            // console.log(setTitle);
+            var board_item_id, board_item_el;
             for (kanban_data in allStudent)
             {
                 for (kanban_item in allStudent[kanban_data].item)
@@ -273,8 +277,8 @@ input::-webkit-inner-spin-button {
 
     // Update State
     function updatestate(idString,state){
-        
-       
+
+
         $.ajax({
             url:"{{route('recrut.updatestate')}}",
             method:'POST',
@@ -343,7 +347,7 @@ input::-webkit-inner-spin-button {
                         $('#show').append();
                         toastr.success(data.success, 'Success Message');
                         fetchrecrut();
-                       
+
                     }
                     if(data.danger)
                     {
@@ -352,7 +356,7 @@ input::-webkit-inner-spin-button {
                     }
                     $(".kanban-overlay").removeClass("show");
                     $(".kanban-sidebar").removeClass("show");
-                    
+
                 }
             });
         }
@@ -364,6 +368,5 @@ input::-webkit-inner-spin-button {
 
     });
 </script>
-<script>setTimeout(() => { $('.toast').hide(); }, 2000);</script>
 @endsection
 

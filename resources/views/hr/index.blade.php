@@ -8,103 +8,88 @@
 
 @section('content')
 
-<div class="row">
-    <div class="d-block">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb rounded-pill">
-                <li class="breadcrumb-item"><a href="{{route('home')}}"><i class="bx bx-home"></i></a></li>
-                <li class="breadcrumb-item active">Hrs</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-<h2 class="w-100">Hr Details</h2>
-<div class="d-block w-100">
-    <div id="success-message"></div>
-    @foreach (['danger', 'warning', 'success', 'info'] as $msg)
-        @if(Session::has($msg))
-                <div id="toast-container" class="toast-container toast-top-right">
-                    <div class="toast toast-success" aria-live="polite" style="display: block;">
-                        <div class="toast-title">Success </div>
-                        <div class="toast-message"> {{ Session::get($msg) }}</div>
-                    </div>
+{{-- HR modal --}}
+  <div class="modal fade text-left" id="addhrmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="myModalLabel1">Add HR</h3>
+                <button type="button" class="close rounded-pill" data-dismiss="modal" aria-label="Close">
+                    <i class="bx bx-x"></i>
+                </button>
+            </div>
+            <form action="{{route('hr.store')}}" method="post" id="addhrform">
+                <div class="container">
+                    <div id="joberrors" class="text-center"></div>
                 </div>
-
-            @endif
-    @endforeach
-</div>
-    <div class="float-right">
-        <a href="{{route('hr.create')}}" class="btn btn-primary mb-1" >
-            <i class='bx bx-add-to-queue mr-50'></i> Add HR
-        </a>
-    </div>
-    <div class="clearfix"></div>
-
-
-<div class="row">
-    <div class="col-12">
-
-        <form method="POST" action="{{route('hr.search')}}">
-            {{ csrf_field() }}
-            @component('layouts.search', ['title' => 'Search'])
-                @component('layouts.searchnow', ['items' => ['Name'],
-                'oldVals' => [isset($searchingVals) ? $searchingVals['name'] : '']])
-                @endcomponent
-            @endcomponent
-        </form>
-        <div class="table-responsive">
-            <table class="table datatable zero-configuration">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($hrs as $hr)
-                    <tr>
-                        <td>{{$hr->name}}</td>
-                        <td>{{$hr->email}}</td>
-                        <td>
-                            <div class="dropdown">
-                                <span class="bx bx-dots-vertical-rounded font-medium-3 dropdown-toggle nav-hide-arrow cursor-pointer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="menu"></span>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                <a href="{{route('hr.edit',$hr->id)}}" class="dropdown-item" ><i class="bx bx-edit-alt mr-1"></i> edit</a>
-                                <form action="{{route('hr.destroy',$hr->id)}}" method="POST" onsubmit="return confirm('Are you sure')">
-                                    @method('DELETE')
-                                    @csrf
-                                <button type="submit" class="dropdown-item"><i class="bx bx-trash mr-1" ></i> delete</button>
-                                </form>
-                                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="position-relative has-icon-left">
+                            <input type="text" id="hrname" class="form-control" name="hrname" placeholder="Name">
+                            <div class="form-control-position">
+                                <i class="bx bx-user"></i>
                             </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Action</th>
-                    </tr>
-                    </tfoot>
-            </table>
-            <div class="row justify-content-between mx-2">
-                <div>
-                    <div class="dataTables_info" id="example2_info" role="status" aria-live="polite">Showing 1 to {{count($hrs)}} of {{count($hrs)}} entries</div>
-                </div>
-                <div>
-                    <div class="dataTables_paginate paging_simple_numbers" id="example2_paginate">
-                    {{ $hrs->links() }}
+                            <span class="text-danger error" data-error="hrname"></span>
+                        </div>
                     </div>
-                </div>
-                </div>
+                    <div class="form-group">
+                        <div class="position-relative has-icon-left">
+                            <input type="text" id="hremail" class="form-control" name="hremail" placeholder="Email" data-error="hremail">
+                            <div class="form-control-position">
+                                <i class="bx bx-mail-send"></i>
+                            </div>
+                            <span class="text-danger error" data-error="hremail"></span>
+                        </div>
+                    </div>
+                    <input type="hidden" name="hrid" id="hrid" value="">
+                    <div class="form-group" id="passwordgroup">
+                        <div class="position-relative has-icon-left">
+                        <input type="password" id="hrpassword" class="form-control" name="hrpassword" placeholder="Password" data-error="hrpassword">
+                            <div class="form-control-position">
+                                <i class="bx bx-radio-circle"></i>
+                            </div>
+                        </div>
+                        <span class="text-danger error" data-error="hrpassword"></span>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light-secondary" data-dismiss="modal">
+                    <i class="bx bx-x d-block d-sm-none"></i>
+                    <span class="d-none d-sm-block">Close</span>
+                </button>
+                <button type="submit" class="btn btn-primary ml-1">
+                    <i class="bx bx-check d-block d-sm-none"></i>
+                    <span class="d-none d-sm-block">Save</span>
+                </button>
+            </div>
+        </form>
+
         </div>
-
-
     </div>
 </div>
+
+
+
+
+
+<div class="float-right mt-3">
+    <button href="{{route('hr.create')}}" class="btn btn-primary mb-1" data-toggle="modal" data-target="#addhrmodal" >
+        <i class='bx bx-add-to-queue mr-50'></i>Add HR
+    </button>
+</div>
+<div class="clearfix"></div>
+
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="float-right">
+            <input type="text" name="searchhr" id="searchhr" class="form-control" placeholder="Search here">
+        </div>
+        @include('hr.hrpagination')
+        <button class="btn btn-danger mt-2" id="multipledelete">Delete</button>
+    </div>
+</div>
+
 @endsection
 
 @section('js')
@@ -112,5 +97,184 @@
     <script src="{{asset('js/datatables.min.js')}}"></script>
     <script src="{{asset('js/dataTables.bootstrap4.min.js')}}"></script>
     <script src="{{asset('js/dataTables.buttons.min.js')}}"></script>
-    <script>setTimeout(() => { $('.toast').hide(); }, 2000);</script>
+    <script>
+        setTimeout(() => { $('.toast').hide(); }, 2000);
+
+
+    $('.checkbox').on('click',function(){
+        if($('.checkbox:checked').length==$('.checkbox').length){
+            $('#check_all').prop('checked',true);
+        }
+        else{
+            $('#check_all').prop('checked',false);
+        }
+    });
+
+    $('#multipledelete').on('click',function(){
+        var idsArr=[];
+        $('.checkbox:checked').each(function(){
+            idsArr.push($(this).attr('data-id'));
+        });
+        if(idsArr.length<0){
+            alert('Select at least one');
+        }
+        else
+        {
+            if(confirm('Are you sure ?')){
+                var strIds=idsArr.join(',');
+                $.ajax({
+                    url: "{{route('deletemultiplehrs')}}",
+                    type: "DELETE",
+                    data:'ids='+strIds,
+                    success: function(data){
+                        toastr.success(data.success, 'Success Message');
+                        $('.checkbox:checked').each(function(){
+                            $(this).parents("tr").remove();
+                        });
+                        fetch_hr(current_page);
+                    }
+                });
+            }
+        }
+    });
+
+
+        var current_page='1';
+        function fetch_hr(page='',query='')
+        {
+            $.ajax({
+                url:"{{route('hrsearch')}}",
+                method: 'post',
+                data:{page:page,search:query},
+                success:function(data)
+                {
+                    $('#hrdata').html('');
+                    $('#hrdata').html(data);
+                }
+            });
+        }
+
+        // Pagination HR
+        $(document).on('click', '.pagination a', function(event){
+            event.preventDefault();
+            var page = $(this).attr('href').split('page=')[1];
+            current_page=page;
+            $('#hidden_page').val(page);
+            $('li').removeClass('active');
+            $(this).parent().addClass('active');
+            fetch_hr(page);
+        });
+
+        // Delete HR
+        $(document).on('click','.deletehr',function(){
+            var hrid=$(this).attr('data-id');
+            if(confirm('Are you sure ?'))
+            {
+                $.ajax({
+                    url: 'hr/'+hrid,
+                    type: "DELETE",
+                    success: function(data){
+                        toastr.success(data.success, 'Success Message');
+                        fetch_hr(current_page);
+                    }
+                });
+            }
+            else
+            {
+                return false;
+            }
+        });
+
+         // Search Job
+        $('#searchhr').on('keyup',function(){
+            var query=$(this).val();
+            fetch_hr('',query);
+        });
+
+
+        // Add HR
+        $(document).on('submit','#addhrform',function(e){
+            e.preventDefault();
+            $('.error').html('');
+            $.ajax({
+                url: "{{ route('hr.store')}}",
+                method: 'post',
+                data: $('#addhrform').serialize(),
+                dataType: 'json',
+                success: function(data){
+                    console.log(data);
+                    // if(data.success){
+                        $('#addhrform')[0].reset();
+                        toastr.success(data.success, 'Success Message');
+                        $('#addhrmodal').modal('hide');
+                        fetch_hr();
+                    // }
+                },
+                error:function(error){
+                    let errors = error.responseJSON.errors;
+                    for(let key in errors)
+                    {
+                        let errorDiv = $(`[data-error="${key}"]`);
+                        if(errorDiv.length )
+                        {
+                            errorDiv.text(errors[key][0]);
+                        }
+                    }
+                }
+            });
+        });
+
+        // Edit Job
+    $(document).on('click','.edithr',function(){
+        $('#addhrform').attr('id','updatehrform');
+        $('#addhrmodal').modal('show');
+        $('#passwordgroup').hide();
+        var hrid=$(this).attr('data-id');
+        $.ajax({
+            url:'hr/'+hrid,
+            method:'GET',
+            success:function(data){
+                if(data.success){
+                    $('#hrid').val(data.success.id);
+                    $('#hrname').val(data.success.name);
+                    $('#hremail').val(data.success.email);
+                }
+            }
+        });
+    });
+
+// update hr
+    $(document).on('submit','#updatehrform',function(e){
+            e.preventDefault();
+            $('.error').html('');
+            $.ajax({
+                url: "{{ route('updatehr')}}",
+                method: 'post',
+                data: $('#updatehrform').serialize(),
+                dataType: 'json',
+                success: function(data){
+                    console.log(data);
+                    // if(data.success){
+                        $('#updatehrform')[0].reset();
+                        toastr.success(data.success, 'Success Message');
+                        $('#addhrmodal').modal('hide');
+                        fetch_hr();
+                        $('#addhrform').attr('id','addhrform');
+                    // }
+                },
+                error:function(error){
+                    let errors = error.responseJSON.errors;
+                    for(let key in errors)
+                    {
+                        let errorDiv = $(`[data-error="${key}"]`);
+                        if(errorDiv.length )
+                        {
+                            errorDiv.text(errors[key][0]);
+                        }
+                    }
+                }
+            });
+        });
+
+    </script>
 @endsection

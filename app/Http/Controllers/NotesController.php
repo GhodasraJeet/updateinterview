@@ -215,10 +215,17 @@ class NotesController extends Controller
             }
             if($request->current=="uncheck"){
                 Note::find($request->noteid)->update(['favourite'=>0]);
+                return response()->json([
+                    'success' => 'Notes removed successfully!'
+                            ]);
             }
+            else
+            {
             return response()->json([
                 'success' => 'Notes added favourite successfully!'
-            ]);
+            ]);    
+            }
+            
         }
         catch(Exception $ex)
         {
@@ -251,8 +258,7 @@ class NotesController extends Controller
     }
 
     private function doSearchingQuery($constraints) {
-        $query = Note::select("*");
-        // dd($query);
+        $query = Note::select("*")->where('user_id',auth::id());
         $fields = array_keys($constraints);
         $index = 0;
         foreach ($constraints as $constraint) {

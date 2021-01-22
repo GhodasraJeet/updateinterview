@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
     public function run()
     {
         $data = [
-            ['name'=>'admin','email'=>'admin@admin.com','password'=>bcrypt('12345678'),'role_id'=>1]
+            ['name'=>'admin','email'=>'admin@admin.com','password'=>bcrypt('12345678'),'profile_pictures'=>'default.jpg','role_id'=>1]
         ];
         User::insert($data);
     }

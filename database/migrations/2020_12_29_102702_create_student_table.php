@@ -14,6 +14,7 @@ class CreateStudentTable extends Migration
     public function up()
     {
         Schema::create('student', function (Blueprint $table) {
+            $table->unsignedBigInteger('state_id');
             $table->bigIncrements('id');
             $table->string('name');
             $table->string('email');
@@ -23,7 +24,6 @@ class CreateStudentTable extends Migration
             $table->integer('fresher')->nullable();
             $table->integer('expereince_year')->nullable();
             $table->integer('expereince_month')->nullable();
-            $table->unsignedBigInteger('state_id');
             $table->foreign('state_id')->references('id')->on('state');
             $table->timestamps();
         });

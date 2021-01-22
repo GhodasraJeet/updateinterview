@@ -3,14 +3,15 @@
 .kanban-container {
   width: 100% !important;
   display: flex;
-  flex-wrap: wrap;
+  /* flex-wrap: wrap; */
+  overflow-x: scroll;
 }
 
 .kanban-container .kanban-board {
   border-radius: 0.267rem;
   padding: 1rem 0rem;
   margin: 0 1.8rem 1rem 0 !important;
-  width: 15.67rem !important;
+  width: 10rem !important;
   background-color: #e7edf3;
 }
 

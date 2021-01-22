@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\User;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class HrController extends Controller
 {
@@ -17,7 +17,7 @@ class HrController extends Controller
      */
     public function index(Request $request)
     {
-        $hrs=User::where('role_id',2)->paginate(2);
+        $hrs=User::where('role_id',2)->paginate(5);
         return view('hr.index',compact('hrs'));
     }
 
@@ -37,32 +37,23 @@ class HrController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $this->validate(
-            $request,[
-            'name'=>"required|max:20",
-            'email'=>"required|unique:users",
-            'password' => ['required','string','same:confirm-password','min:8','max:20','regex:/[a-z]/',
-            'regex:/[A-Z]/',
 
-            'regex:/[a-z]/',
+        $hr=new User();
+        $hr->name=$request->hrname;
+        $hr->email=$request->hremail;
+        $hr->password=bcrypt($request->hrpassword);
+        $hr->role_id=2;
+        $hr->save();
+        return response()->json(['success'=>'Hr added successfully']);
 
-             'regex:/[0-9]/',
+    }
 
-            'regex:/[@$!%*#?&]/'],
-
-            'confirm-password'=>"required"
-            ]);
-
-
-            $hr=new User();
-            $hr->name=$request->name;
-            $hr->email=$request->email;
-            $hr->password=bcrypt($request->password);
-            $hr->role_id=2;
-            $hr->save();
-            return redirect()->route('hr.create')->with('success','HR is successfully added');
+    public function updatehr(UpdateUserRequest $request)
+    {
+        User::findOrFail($request->hrid)->update(['name'=>$request->hrname,'email'=>$request->hremail]);
+        return response()->json(['success','Hr Updated Successfully']);
     }
     /**
      * Display the specified resource.
@@ -72,7 +63,12 @@ class HrController extends Controller
      */
     public function show($id)
     {
-
+        try {
+            $hrs=User::findorfail($id);
+            return response()->json(['success'=>$hrs]);
+        } catch (Exception $ex) {
+            return response()->json(['success'=>'Something Wrong']);
+        }
     }
 
     /**
@@ -83,12 +79,6 @@ class HrController extends Controller
      */
     public function edit($id)
     {
-        try {
-            $hr=User::findorfail($id);
-        } catch (Exception $ex) {
-            return redirect()->route('hr.index')->with('danger','HR could not edit.');
-        }
-        return view('hr.edit',compact('hr'));
     }
 
     /**
@@ -100,18 +90,6 @@ class HrController extends Controller
      */
     public function update(Request $request,$id)
     {
-
-            $this->validate(
-                $request,[
-                'name'=>"required|max:20",
-                'email'=>"required",
-
-            ]);
-
-            User::findOrFail($id)->update($request->all());
-            return redirect()->route('hr.index')->with('success','Hr Updated Successfully');
-            return redirect()->route('hr.index')->with('danger','Hr not Updated Successfully');
-
     }
 
     /**
@@ -123,43 +101,36 @@ class HrController extends Controller
     public function destroy($id)
     {
         try{
-            User::find($id)->delete($id);
-
-            return redirect()->route('hr.index')->with('success','Hr deleted Successfully');
-
+            User::findorfail($id)->delete($id);
+            return response()->json(['success'=>'Hr delted successfully']);
         }
         catch(Exception $ex){
-            return redirect()->route('hr.index')->with('danger','Hr not deleted Successfully');
-
+            return response()->json(['success'=>'Something Wrong']);
         }
-
     }
 
-    /**
-     * Search HR
-     */
-    public function searchhr(Request $request)
+    // Multiple Delete HR
+    public function deleteMultipleHrs(Request $request)
     {
-        $constraints = [
-            'name' => $request['name']
-            ];
-        $employees = $this->doSearchingQuery($constraints);
-        $constraints['name'] = $request['name'];
-        return view('hr.index', ['hrs' => $employees, 'searchingVals' => $constraints]);
-
+        $ids=$request->ids;
+        User::whereIn('id',explode(",",$ids))->delete();
+        return response()->json(['success'=>'HR deleted successfully']);
     }
 
-    private function doSearchingQuery($constraints) {
-        $query = DB::table('users')->select("*");
-        // dd($query);
-        $fields = array_keys($constraints);
-        $index = 0;
-        foreach ($constraints as $constraint) {
-            if ($constraint != null) {
-                $query = $query->where($fields[$index], 'like', '%'.$constraint.'%');
+    // Search HR
+    public function fetch_hr(Request $request)
+    {
+        if($request->ajax())
+        {
+            $datas=User::where('role_id',2);
+            if(isset($request->search))
+            {
+                $query = $request->search;
+                $query = str_replace(" ", "%", $query);
+                $datas->where('name', 'like', '%'.$query.'%')->orWhere('email', 'like', '%'.$query.'%');
             }
-            $index++;
+            $hrs=$datas->paginate(5);
+            return view('hr.hrpagination', compact('hrs'))->render();
         }
-        return $query->paginate(5);
     }
 }
