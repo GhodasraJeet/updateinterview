@@ -81,5 +81,6 @@ Route::group(['middleware' => 'customauth'], function () {
 
     // faltu
     Route::post('updatehr','HrController@updatehr')->name('updatehr');
+    Route::post('updatejob','JobsController@updatejob')->name('updatejob');
 
 });

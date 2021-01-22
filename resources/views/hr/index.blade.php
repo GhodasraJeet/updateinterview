@@ -73,7 +73,7 @@
 
 
 <div class="float-right mt-3">
-    <button href="{{route('hr.create')}}" class="btn btn-primary mb-1" data-toggle="modal" data-target="#addhrmodal" >
+    <button href="{{route('hr.create')}}" class="btn btn-primary mb-1" data-toggle="modal" data-target="#addhrmodal" id="addhrbutton" >
         <i class='bx bx-add-to-queue mr-50'></i>Add HR
     </button>
 </div>
@@ -223,7 +223,9 @@
                 }
             });
         });
-
+        $('#addhrbutton').on('click',function(){
+            $('#passwordgroup').show();
+        });
         // Edit Job
     $(document).on('click','.edithr',function(){
         $('#addhrform').attr('id','updatehrform');
@@ -258,7 +260,7 @@
                         $('#updatehrform')[0].reset();
                         toastr.success(data.success, 'Success Message');
                         $('#addhrmodal').modal('hide');
-                        fetch_hr();
+                        fetch_hr(current_page);
                         $('#addhrform').attr('id','addhrform');
                     // }
                 },

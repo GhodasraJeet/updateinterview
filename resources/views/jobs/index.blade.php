@@ -146,7 +146,7 @@
     });
 
     // Add Job
-    $('#jobformsingle').on('submit',function(e){
+    $(document).on('submit','#jobformsingle',function(e){
         e.preventDefault();
         $('.error').html('');
         $.ajax({
@@ -184,7 +184,7 @@
             method:'GET',
             success:function(data){
                 if(data.success){
-                    // $('#jobformsingle').attr('id','updatejobform');
+                    $('#jobformsingle').attr('id','updatejobform');
                     $('#jobid').val(data.success.id);
                     $('#jobtitle').val(data.success.title);
                     $('#editjobdescription').val(data.success.description);
@@ -227,22 +227,32 @@
     });
 
     // Update Job
-    // $(document).on('submit','#updatejobform',function(e){
-    //     e.preventDefault();
-    //     console.log($('#updatejobform').serialize());
-    //     var jobid=$('#jobid').val();
-    //     $.ajax({
-    //         url:"{{route('job.store')}}",
-    //         method:'post',
-    //         data:$('#updatejobform').serialize(),
-    //         dataType: 'json',
-    //         success:function(data){
-    //             console.log(data);
-    //             $('#updatejobform')[0].reset();
-    //             fetch_job(current_page);
-    //         }
-    //     });
-    // });
+    $(document).on('submit','#updatejobform',function(e){
+        e.preventDefault();
+        $('.error').html('');
+        $.ajax({
+            url:"{{route('updatejob')}}",
+            method:'post',
+            data:$('#updatejobform').serialize(),
+            dataType: 'json',
+            success:function(data){
+                $('#updatejobform')[0].reset();
+                toastr.success(data.success, 'Success Message');
+            },
+            error:function(error)
+            {
+                let errors = error.responseJSON.errors;
+                for(let key in errors)
+                {
+                    let errorDiv = $(`[data-error="${key}"]`);
+                    if(errorDiv.length )
+                    {
+                        errorDiv.text(errors[key][0]);
+                    }
+                }
+            }
+        });
+    });
 </script>
 
 @endsection

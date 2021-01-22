@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreJobRequest;
+use App\Http\Requests\UpdateJobRequest;
 use App\Job;
 use Exception;
 use App\Technology;
@@ -42,25 +43,23 @@ class JobsController extends Controller
      */
     public function store(StoreJobRequest $request)
     {
-        if(isset($request->jobid)){
-            $job=Job::updateOrCreate(['id'=>$request->jobid],
-            [
-                'title'=>$request->title,
-                'description'=>$request->jobdescription
-            ]);
-            $job->getTechnology()->sync($request->technology);
-            return response()->json(['success'=>$job]);
-        }
-        else
-        {
-            $job=new Job();
-            $job->title=$request->title;
-            $job->description=$request->jobdescription;
-            $job->save();
-            $job->getTechnology()->attach($request->technology);
-            return response()->json(['success'=>'Job successfully added']);
-        }
+        $job=new Job();
+        $job->title=$request->title;
+        $job->description=$request->jobdescription;
+        $job->save();
+        $job->getTechnology()->attach($request->technology);
+        return response()->json(['success'=>'Job successfully added']);
+    }
 
+    public function updatejob(UpdateJobRequest $request)
+    {
+        $job=Job::updateOrCreate(['id'=>$request->jobid],
+        [
+            'title'=>$request->title,
+            'description'=>$request->jobdescription
+        ]);
+        $job->getTechnology()->sync($request->technology);
+        return response()->json(['success'=>$request->all()]);
     }
 
     /**
